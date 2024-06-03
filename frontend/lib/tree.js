@@ -67,19 +67,17 @@ export default class Tree {
     }
 
     /**
-     * If there're more then 1 root nodes
-     * it's needed to check if it's possible to establish
-     * new relations between nodes
+     * Iteratively attempts to rebuild the tree until no changes are made,
+     * ensuring all nodes are properly linked to their parents.
      */
     attemptRebuildingTree() {
-        let changesMade = true;
-        while (changesMade) {
+        let changesMade;
+        do {
             changesMade = this.rebuildPass();
-        }
+        } while (changesMade);
     }
 
     rebuildPass() {
-        const newRoots = [];
         const childNodes = new Set();
         this.roots.forEach(node => {
             if (node.parentId && this.nodeMap.has(node.parentId)) {
@@ -90,14 +88,8 @@ export default class Tree {
                 }
             }
         });
-        let foundNewParent = false;
-        this.roots.forEach(node => {
-            if (!childNodes.has(node.id)) {
-                newRoots.push(node);
-            } else {
-                foundNewParent = true;
-            }
-        });
+        const newRoots = this.roots.filter(node => !childNodes.has(node.id));
+        const foundNewParent = newRoots.length !== this.roots.length;
         this.roots = newRoots;
         return foundNewParent;
     }
@@ -105,23 +97,18 @@ export default class Tree {
     addNode(value, parentId, id) {
         const newNodeId = id || Math.floor(Math.random() * 1000000);
         const parentNode = this.nodeMap.get(parentId);
+
         if (parentNode) {
             const newNode = new Node(value, newNodeId, parentNode);
             parentNode.addChild(newNode);
             this.nodeMap.set(newNodeId, newNode);
-            if (this.roots.length > 1) {
-                this.attemptRebuildingTree();
-            }
-            return newNode;
         } else {
             const newNode = new Node(value, newNodeId, parentId);
             this.roots.push(newNode);
             this.nodeMap.set(newNodeId, newNode);
-
-            if (this.roots.length > 1) {
-                this.attemptRebuildingTree();
-            }
-            return newNode;
+        }
+        if (this.roots.length > 1) {
+            this.attemptRebuildingTree();
         }
     }
 
