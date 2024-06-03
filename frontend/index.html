@@ -1,0 +1,51 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="module" src="./main.js" defer></script>
+</head>
+
+<body>
+    <style>
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            border: 1px solid blue;
+
+            &.middle {
+                width: 40px;
+                flex-grow: 0;
+            }
+        }
+
+        .container {
+            border: 1px solid blue;
+        }
+    </style>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <tree-view class="cache"></tree-view>
+            </div>
+            <div class="col middle">
+                <button class="add-node-to-cache">
+                    &lt;&lt;&lt;
+                </button>
+            </div>
+            <div class="col">
+                <tree-view class="db"></tree-view>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
