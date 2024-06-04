@@ -43,16 +43,11 @@ class Server {
         if (!url.startsWith('/' + API_START)) {
             return void (await this.application.statics.serve(url, transport))
         }
-        let body;
-        try {
-            body = await Transport.parseBody(req);
-        } catch (e) {
-            return void client.error(500, e.message);
-        }
+        let body = await Transport.parseBody(req).then((data) => data, () => ({}));
         const controller = await this.application.getMethod(url, method);
         if (!controller) return void client.error(404, 'Endpoint does not exist!');
         const { handler, params } = controller;
-        const result = await handler(params);
+        const result = await handler({ ...params, ...body });
         return void client.send(result, 200);
     }
 

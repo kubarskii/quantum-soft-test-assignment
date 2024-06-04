@@ -29,12 +29,35 @@
         .container {
             border: 1px solid blue;
         }
+
+        .cache-footer {
+            margin-top: auto;
+        }
+
+        .tree-container {
+            flex: 1;
+        }
+
+        .add-node-to-cache {
+            margin: auto;
+        }
     </style>
 
     <div class="container">
         <div class="row">
             <div class="col">
-                <tree-view class="cache"></tree-view>
+                <div class="tree-container">
+                    <tree-view class="cache"></tree-view>
+                </div>
+                <div class="row">
+                    <div class="cache-footer">
+                        <button class="command" data-command="add">+</button>
+                        <button class="command" data-command="remove">-</button>
+                        <button class="command" data-command="alter">a</button>
+                        <button class="command" data-command="apply">Apply</button>
+                        <button class="command" data-command="reset">Reset</button>
+                    </div>
+                </div>
             </div>
             <div class="col middle">
                 <button class="add-node-to-cache">
@@ -42,7 +65,9 @@
                 </button>
             </div>
             <div class="col">
-                <tree-view class="db"></tree-view>
+                <div class="tree-container">
+                    <tree-view class="db"></tree-view>
+                </div>
             </div>
         </div>
     </div>

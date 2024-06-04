@@ -79,12 +79,18 @@ export default class Tree {
 
     rebuildPass() {
         const childNodes = new Set();
+        const deletedNodes = new Set();
         this.roots.forEach(node => {
             if (node.parentId && this.nodeMap.has(node.parentId)) {
                 const parent = this.nodeMap.get(node.parentId);
-                if (parent && !parent.isDeleted) {
+                if (parent) {
                     parent.addChild(node);
                     childNodes.add(node.id);
+                    if (parent.isDeleted) {
+                        node.isDeleted = true;
+                        node.delete();
+                        deletedNodes.add(node.id);
+                    }
                 }
             }
         });
@@ -96,9 +102,12 @@ export default class Tree {
 
     addNode(value, parentId, id) {
         const newNodeId = id || Math.floor(Math.random() * 1000000);
+        if (this.nodeMap.has(newNodeId)) {
+            console.error("Node with ID " + newNodeId + " already exists.");
+            return null;
+        }
         const parentNode = this.nodeMap.get(parentId);
-
-        if (parentNode) {
+        if (parentNode && !parentNode.isDeleted) {
             const newNode = new Node(value, newNodeId, parentNode);
             parentNode.addChild(newNode);
             this.nodeMap.set(newNodeId, newNode);
@@ -120,8 +129,6 @@ export default class Tree {
         const node = this.nodeMap.get(id);
         if (node) {
             node.delete();
-            // do not delete actually, just mark as deleted
-            // this.nodeMap.delete(id);
         } else {
             throw new Error('Node not found');
         }

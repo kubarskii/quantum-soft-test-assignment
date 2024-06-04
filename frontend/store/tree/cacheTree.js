@@ -70,6 +70,13 @@ export const cacheTreeReducer = (state = initialState, action) => {
             state.transactions.push(action)
             return state;
         }
+        case (actionTypes.RESET_CACHE): {
+            return {
+                ...state,
+                tree: new Tree(),
+                transactions: [],
+            }
+        }
         default: {
             return state
         }

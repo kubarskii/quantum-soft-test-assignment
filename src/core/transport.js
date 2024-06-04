@@ -20,8 +20,10 @@ class Transport {
         }
         if (!chunks.length) return null;
         const contentType = req.headers['content-type'];
-        if (contentType === 'application/json')
-            return JSON.parse(body.toString());
+        if (contentType === 'application/json') {
+            const str = chunks.toString();
+            return JSON.parse(str);
+        }
         throw new Error('Unknown contentType')
     }
 

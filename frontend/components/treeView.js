@@ -10,8 +10,17 @@ class TreeView extends ReactiveElement {
             isEditable: { type: Boolean, reflect: true },
             onSelect: { type: Object, reflect: false },
             onEdit: { type: Object, reflect: false },
+            onAdd: { type: Object, reflect: false },
+            editableId: { type: Number, reflect: false },
+            showAddNewNodeTo: { type: Boolean, reflect: true },
         };
     }
+
+    static get observedAttributes() {
+        return ['data'];
+    }
+
+    cursorPosition = 0;
 
     constructor() {
         super();
@@ -20,6 +29,8 @@ class TreeView extends ReactiveElement {
         this.handleEvent = this.handleEvent.bind(this)
         this.handleChange = this.handleChange.bind(this)
         this.renderTree = this.renderTree.bind(this)
+        this.restoreFocus = this.restoreFocus.bind(this);
+        this.restoreFocus = this.restoreFocus.bind(this);
     }
 
     toggleNode(nodeId) {
@@ -33,10 +44,12 @@ class TreeView extends ReactiveElement {
         this.render();
     }
 
+
     renderTree(node) {
         if (!node) return ''
         const isExpanded = this.state.expandedNodes[node.id];
         const isSelected = this.state.selected === node.id;
+        const isEditing = this.editableId === node.id && node.isDeleted === false;
         return `
             <li>
                 <span>
@@ -45,14 +58,19 @@ class TreeView extends ReactiveElement {
                 : ''}
                 </span>
                 <span 
-                    class="node-value${isSelected ? ' selected' : ''}"
-                    ${this.isEditable ? 'contenteditable' : ''}
-                    data-node-id="${node.id}">
-                    ${node.value}
-                </span>
+                    class="node-value${isSelected ? ' selected' : ''}${node.isDeleted ? ' deleted' : ''}"
+                    ${isSelected && isEditing ? 'contenteditable' : ''}
+                    data-node-id="${node.id}">${node.value}</span>
+                <span>${isSelected && isEditing ? `<button class="save-change" data-node-id="${node.id}">Save</button>` : ''}</span>
                 ${isExpanded && node.children && node.children.length > 0
                 ? `<ul>${node.children.map(child => this.renderTree(child)).join('')}</ul>`
                 : ''}
+                ${this.showAddNewNodeTo === node.id && !node.isDeleted ? `<ul>
+                    <li>
+                        <input class="item-value-to-add" autofocus placeholder="Add node here" />
+                        <button class="close-add">ⓧ</button><button data-node-id="${node.id}" class="apply-add">✓</button>
+                    </li>
+                </ul>` : ''}
             </li>
         `;
     }
@@ -74,6 +92,7 @@ class TreeView extends ReactiveElement {
                 .node-value { cursor: pointer; }
                 .node-value:hover { color: blue; }
                 .node-value.selected { background-color: #d3d3d3; } /* Highlight selected node */
+                .node-value.deleted { color: red; text-decoration: line-through; } /* Highlight selected node */
                 .node-value[contenteditable="true"] { border: 1px solid #ccc; padding: 2px 4px; }
                 .node-value[contenteditable="false"] { pointer-events: none; }
             </style>
@@ -85,40 +104,91 @@ class TreeView extends ReactiveElement {
         return '';
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        this.shadowRoot.addEventListener('click', this.handleEvent);
-        this.shadowRoot.addEventListener('input', this.handleChange);
+    update() {
+        super.update()
+        this.restoreFocus();
+        if (this.state.selected !== this.editableId) {
+            this.editableId = null;
+        }
     }
 
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        this.shadowRoot.removeEventListener('click', this.handleEvent);
-        this.shadowRoot.removeEventListener('input', this.handleChange);
-    }
-
-    handleChange(event) {
-        const target = event.target;
-        if (target.classList.contains('node-value')) {
-            const nodeId = parseInt(target.dataset.nodeId, 10);
-            if (typeof this.onEdit === 'function') {
-                this.onEdit(nodeId, event.target.textContent);
+    captureCursorPosition() {
+        const selection = this.shadowRoot.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const elementToFocus = this.shadowRoot
+                .querySelector(`[data-node-id="${this.state.selected}"][contenteditable]`);
+            if (elementToFocus) {
+                this.cursorPosition = range.startOffset;
             }
         }
     }
 
+    restoreFocus() {
+        if (this.state.selected) {
+            const elementToFocus = this.shadowRoot
+                .querySelector(`[data-node-id="${this.state.selected}"][contenteditable]`);
+            if (elementToFocus) {
+                elementToFocus.focus();
+                const selection = this.shadowRoot.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(elementToFocus);
+                range.setStart(elementToFocus.firstChild, this.cursorPosition);
+                range.setEnd(elementToFocus.firstChild, this.cursorPosition);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this.shadowRoot.addEventListener('keyup', this.handleChange);
+        this.shadowRoot.addEventListener('click', this.handleEvent);
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.shadowRoot.removeEventListener('keyup', this.handleChange);
+        this.shadowRoot.removeEventListener('click', this.handleEvent);
+    }
+
+    handleChange(event) {
+        event.preventDefault();
+        const target = event.target;
+        if (target.classList.contains('node-value')) {
+            if (target.classList.contains('node-value') && target.contentEditable)
+                this.captureCursorPosition();
+        }
+    }
+
     handleEvent(event) {
+        event.preventDefault();
         const target = event.target;
         if (target.classList.contains('toggle-node')) {
             const nodeId = parseInt(target.dataset.nodeId, 10);
             this.toggleNode(nodeId);
         } else if (target.classList.contains('node-value')) {
             const nodeId = parseInt(target.dataset.nodeId, 10);
-            this.state.selected = nodeId; // Set the currently focused node
+            this.state.selected = nodeId;
             if (this.onSelect) {
                 this.onSelect(nodeId);
             }
             this.render();
+        } else if (target.classList.contains('save-change')) {
+            const nodeId = parseInt(target.dataset.nodeId, 10);
+            const item = this.shadowRoot.querySelector('.node-value.selected[contenteditable]')
+            if (item) {
+                this.onEdit(nodeId, item.textContent);
+                this.editableId = null;
+            }
+        } else if (target.classList.contains('close-add')) {
+            this.showAddNewNodeTo = null;
+        } else if (target.classList.contains('apply-add')) {
+            const { value } = this.shadowRoot.querySelector('.item-value-to-add');
+            const nodeId = parseInt(target.dataset.nodeId, 10);
+            if (typeof this.onAdd === 'function') this.onAdd(nodeId, value);
+            this.showAddNewNodeTo = null;
         }
     }
 }

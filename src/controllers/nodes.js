@@ -7,7 +7,22 @@ const sleep = (ms) => {
     return new Promise(res => setTimeout(res, ms))
 }
 
-const TIMEOUT = 1000
+const acitions = {
+    REMOVE_VALUE: (payload) => {
+        const { id } = payload;
+        tree.deleteNode(id)
+    },
+    ADD_VALUE: (payload) => {
+        const { value, parentId } = payload;
+        tree.addNode(value, parentId)
+    },
+    CHANGE_VALUE: (payload) => {
+        const { id, value } = payload;
+        tree.updateNode(id, value)
+    },
+}
+
+const TIMEOUT = 100
 
 async function getNodes() {
     await sleep(TIMEOUT);
@@ -16,7 +31,8 @@ async function getNodes() {
 
 async function getNode({ id }) {
     await sleep(TIMEOUT);
-    const node = tree.findNode(id).toJSON()
+    const node = tree.findNode(id).toJSON();
+    if (node.isDeleted) return null;
     node.children = [];
     return node;
 }
@@ -29,6 +45,12 @@ async function refresh() {
 
 async function applyChanges({ changes }) {
     await sleep(TIMEOUT);
+    if (Array.isArray(changes)) {
+        changes.forEach(({ type, payload }) => {
+            const handler = acitions[type];
+            handler(payload);
+        })
+    }
     return true
 }
 
