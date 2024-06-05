@@ -28,7 +28,7 @@ class Statics extends Cache {
     }
 
     get(key) {
-        if (key.startsWith('/')) key = key.slice(1);
+        if (key.startsWith(path.sep)) key = key.slice(path.sep.length);
         return this.files.get(key);
     }
 
@@ -77,7 +77,8 @@ class Statics extends Cache {
         const folder = urlPath.endsWith('/');
         const filePath = urlPath + (folder ? 'index.html' : '');
         const fileExt = this.getExtension(filePath);
-        const data = this.get(filePath);
+        // debugger;
+        const data = this.get(filePath.split('/').join(path.sep));
         if (Buffer.isBuffer(data)) return void transport.message(data, 200, fileExt);
         if (!folder && this.get(urlPath + '/index.html')) {
             const query = params ? '?' + params : '';
