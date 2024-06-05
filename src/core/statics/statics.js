@@ -90,10 +90,9 @@ class Statics extends Cache {
             const { size } = stat;
             const range = this.#parseRangeHeader(transport.req.headers.range);
             const { start, end = size - 1 } = range;
-            // TEMP FIX
-            // if (start >= end || start >= size || end >= size) {
-            //     return void transport.error(416);
-            // }
+            if (start >= end || start >= size || end >= size) {
+                return void transport.error(416);
+            }
             const options = { start, end, size };
             const readable = fs.createReadStream(absPath, options);
             readable.on('error', () => {
