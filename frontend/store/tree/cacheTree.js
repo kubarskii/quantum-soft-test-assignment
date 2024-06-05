@@ -45,8 +45,9 @@ export const cacheTreeReducer = (state = initialState, action) => {
             return { ...state, isLoading: false, error: payload };
         }
         case (actionTypes.ADD_ITEM_FROM_DB): {
-            const { value, parentId, id } = payload;
-            state.tree.addNode(value, parentId, id);
+            const { value, parentId, id, isDeleted } = payload;
+            if (!isDeleted)
+                state.tree.addNode(value, parentId, id);
             return { ...state, isLoading: false };
         }
         case (actionTypes.REMOVE_ADDED_ITEM): {

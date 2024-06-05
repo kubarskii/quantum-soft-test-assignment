@@ -10,7 +10,16 @@ const getById = (id) => {
     store.dispatch(cacheTreeActions.fetch());
     fetch(`/api/nodes/${id}`)
         .then(data => data.json(), (error) => { throw new Error(error) })
-        .then(data => store.dispatch(cacheTreeActions.addFromDB(data)))
+        .then(data => {
+            const state = store.getState();
+            const { tree } = state.cache;
+            const node = tree.findNode(data.id);
+            if (node && !node.isDeleted && data.isDeleted)
+                store.dispatch(cacheTreeActions.removeValue({ id: data.id }))
+            else
+                store.dispatch(cacheTreeActions.addFromDB(data))
+
+        })
         .catch((e) => store.dispatch(cacheTreeActions.fetchError(e)))
 }
 
@@ -22,6 +31,12 @@ const applyChangesOnBackend = (changes) => {
     })
         .then(data => data.json(), (error) => { throw new Error(error) })
         .then(() => getTree())
+        .then(() => {
+            const state = store.getState();
+            const { tree } = state.cache;
+            const promises = tree.roots.map(node => getById(node.id))
+            return Promise.all(promises);
+        })
         .finally(() => store.dispatch(cacheTreeActions.apply()))
 }
 
@@ -44,6 +59,7 @@ cacheTree.isEditable = true
 cacheTree.onEdit = (id, value) => {
     store.dispatch(cacheTreeActions.changeValue({ id: parseInt(id, 10), value }))
 }
+
 cacheTree.onAdd = (id, value) => {
     store.dispatch(cacheTreeActions.addValue({
         value,

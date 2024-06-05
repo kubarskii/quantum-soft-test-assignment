@@ -125,6 +125,25 @@ export default class Tree {
         return this.nodeMap.get(id)
     }
 
+    findNode(id) {
+        for (const root of this.roots) {
+            const node = this._findNode(id, root);
+            if (node) return node;
+        }
+        return null;
+    }
+
+    _findNode(id, node) {
+        if (node.id == id) {
+            return node;
+        }
+        for (const child of node.children) {
+            const result = this._findNode(id, child);
+            if (result) return result;
+        }
+        return null;
+    }
+
     deleteNode(id) {
         const node = this.nodeMap.get(id);
         if (node) {

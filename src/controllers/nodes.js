@@ -31,7 +31,6 @@ async function getNodes() {
 async function getNode({ id }) {
     await sleep(TIMEOUT);
     const node = tree.findNode(id).toJSON();
-    if (node.isDeleted) return null;
     node.children = [];
     return node;
 }
