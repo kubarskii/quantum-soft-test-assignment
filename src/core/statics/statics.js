@@ -77,7 +77,6 @@ class Statics extends Cache {
         const folder = urlPath.endsWith('/');
         const filePath = urlPath + (folder ? 'index.html' : '');
         const fileExt = this.getExtension(filePath);
-        // debugger;
         const data = this.get(filePath.split('/').join(path.sep));
         if (Buffer.isBuffer(data)) return void transport.message(data, 200, fileExt);
         if (!folder && this.get(urlPath + '/index.html')) {

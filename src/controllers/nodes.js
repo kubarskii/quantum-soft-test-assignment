@@ -2,7 +2,6 @@ const { Tree } = require('../domain/tree')
 const { initialTree } = require('../domain/constants');
 
 let tree = Tree.fromObject(initialTree);
-
 const sleep = (ms) => {
     return new Promise(res => setTimeout(res, ms))
 }
@@ -13,12 +12,12 @@ const acitions = {
         tree.deleteNode(id)
     },
     ADD_VALUE: (payload) => {
-        const { value, parentId } = payload;
-        tree.addNode(value, parentId)
+        const { value, parentId, id } = payload;
+        tree.addNode(value, parentId, id)
     },
     CHANGE_VALUE: (payload) => {
         const { id, value } = payload;
-        tree.updateNode(id, value)
+        tree.changeValue(id, value)
     },
 }
 
@@ -26,7 +25,7 @@ const TIMEOUT = 100
 
 async function getNodes() {
     await sleep(TIMEOUT);
-    return tree.toJSON();
+    return tree.toJSON()[0];
 }
 
 async function getNode({ id }) {

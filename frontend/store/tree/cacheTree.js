@@ -13,6 +13,7 @@ const actionTypes = {
     REVERT_CACHE: 'REVERT_CACHE',
     // reset to default
     RESET_CACHE: 'RESET_CACHE',
+    APPLY_CHANGE: 'APPLY_CHANGE',
 }
 export const cacheTreeActions = {
     addFromDB: (payload) => ({ type: actionTypes.ADD_ITEM_FROM_DB, payload }),
@@ -24,6 +25,7 @@ export const cacheTreeActions = {
     fetchError: (payload) => ({ type: actionTypes.FETCH_TREE_ITEM_ERROR, payload }),
     revert: () => ({ type: actionTypes.REVERT_CACHE }),
     reset: () => ({ type: actionTypes.RESET_CACHE }),
+    apply: () => ({ type: actionTypes.APPLY_CHANGE }),
 }
 
 const initialState = {
@@ -74,6 +76,12 @@ export const cacheTreeReducer = (state = initialState, action) => {
             return {
                 ...state,
                 tree: new Tree(),
+                transactions: [],
+            }
+        }
+        case (actionTypes.APPLY_CHANGE): {
+            return {
+                ...state,
                 transactions: [],
             }
         }

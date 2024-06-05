@@ -22,7 +22,7 @@ const applyChangesOnBackend = (changes) => {
     })
         .then(data => data.json(), (error) => { throw new Error(error) })
         .then(() => getTree())
-        .finally(() => store.dispatch(cacheTreeActions.reset()))
+        .finally(() => store.dispatch(cacheTreeActions.apply()))
 }
 
 let currentSelectedId;
@@ -45,7 +45,11 @@ cacheTree.onEdit = (id, value) => {
     store.dispatch(cacheTreeActions.changeValue({ id: parseInt(id, 10), value }))
 }
 cacheTree.onAdd = (id, value) => {
-    store.dispatch(cacheTreeActions.addValue({ value, parentId: id }))
+    store.dispatch(cacheTreeActions.addValue({
+        value,
+        parentId: id,
+        id: Math.floor(Math.random() * 1000000)
+    }))
 }
 
 addToCacheButton.addEventListener('click', () => {
@@ -87,7 +91,6 @@ const commands = {
 /** @type {EventListenerOrEventListenerObject} */
 const commandProcessor = (event) => {
     const { target: { dataset: { command: commandName } = {} } = {} } = event;
-    if (!currentCacheSelectedId) return;
     const state = store.getState();
     const { tree } = state.cache;
     const selectedNode = tree.getNode(currentCacheSelectedId);

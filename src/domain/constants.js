@@ -1,4 +1,4 @@
-const initialTree = {
+const initialTree = [{
     id: 1,
     value: 'Root',
     children: [
@@ -33,8 +33,34 @@ const initialTree = {
                         {
                             id: 13,
                             value: 'Grand-grandchild12',
+                            children: [
+                                {
+                                    id: 16,
+                                    value: 'GGgrandchild13',
+                                    children: []
+                                },
+                                {
+                                    id: 17,
+                                    value: 'GGgrandchild14',
+                                    children: []
+                                },
+                                {
+                                    id: 18,
+                                    value: 'GGgrandchild15',
+                                    children: []
+                                },
+                            ]
+                        },
+                        {
+                            id: 14,
+                            value: 'Grand-grandchild12',
                             children: []
-                        }
+                        },
+                        {
+                            id: 15,
+                            value: 'Grand-grandchild12',
+                            children: []
+                        },
                     ]
                 },
             ]
@@ -66,7 +92,7 @@ const initialTree = {
             ]
         },
     ]
-}
+}]
 
 module.exports = {
     initialTree

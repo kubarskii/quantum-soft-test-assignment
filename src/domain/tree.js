@@ -1,14 +1,14 @@
 class Node {
-    constructor(value, id, parent = null, children = []) {
+    constructor(value, id, parentId, children = []) {
         this.id = id;
         this.value = value;
-        this.parent = parent;
+        this.parentId = parentId;
         this.children = children;
         this.isDeleted = false;
     }
 
     addChild(child) {
-        child.parent = this;
+        child.parentId = this.id;
         this.children.push(child);
     }
 
@@ -18,17 +18,14 @@ class Node {
 
     delete() {
         this.isDeleted = true;
-        for (const child of this.children) {
-            child.delete();
-        }
+        this.children.forEach(child => child.delete());
     }
 
     toJSON() {
         return {
             id: this.id,
-            // parentId is undefined if root
-            parentId: this.parent?.id,
             value: this.value,
+            parentId: this.parentId,
             isDeleted: this.isDeleted,
             children: this.children.map(child => child.toJSON())
         };
@@ -36,20 +33,20 @@ class Node {
 }
 
 class Tree {
+    constructor() {
+        this.roots = []; // Support multiple root nodes like a forest
+        this.nodeMap = new Map(); // Efficient lookup for nodes
+    }
 
     static fromObject(obj) {
-        if (!obj || !obj.value || !obj.id) {
-            throw new Error("Invalid node object");
-        }
-        const rootNode = new Node(obj.value, obj.id);
-        if (obj.children) {
-            for (const childObj of obj.children) {
-                const childNode = Tree.createObjectAsNode(childObj, rootNode);
-                rootNode.addChild(childNode);
-            }
-        }
         const tree = new Tree();
-        tree.root = rootNode;
+        if (Array.isArray(obj)) {
+            obj.forEach(rootObj => {
+                const rootNode = Tree.createObjectAsNode(rootObj);
+                tree.roots.push(rootNode);
+                tree.nodeMap.set(rootNode.id, rootNode);
+            });
+        }
         return tree;
     }
 
@@ -57,66 +54,100 @@ class Tree {
         if (!obj || !obj.value || !obj.id) {
             throw new Error("Invalid node object");
         }
-        const node = new Node(obj.value, obj.id, parent);
+        const node = new Node(obj.value, obj.id, parent ? parent.id : null);
         if (obj.children) {
-            for (const childObj of obj.children) {
+            obj.children.forEach(childObj => {
                 const childNode = Tree.createObjectAsNode(childObj, node);
                 node.addChild(childNode);
-            }
+            });
         }
         return node;
     }
 
-    constructor(rootValue, rootId) {
-        this.root = new Node(rootValue, rootId);
+    attemptRebuildingTree() {
+        let changesMade;
+        do {
+            changesMade = this.rebuildPass();
+        } while (changesMade);
+    }
+
+    rebuildPass() {
+        const childNodes = new Set();
+        const deletedNodes = new Set();
+        this.roots.forEach(node => {
+            if (node.parentId && this.nodeMap.has(node.parentId)) {
+                const parent = this.nodeMap.get(node.parentId);
+                if (parent && !parent.isDeleted) {
+                    parent.addChild(node);
+                    childNodes.add(node.id);
+                } else if (parent && parent.isDeleted) {
+                    node.isDeleted = true;
+                    node.delete();
+                    deletedNodes.add(node.id);
+                }
+            }
+        });
+        this.roots = this.roots.filter(node => !childNodes.has(node.id));
+        return childNodes.size > 0;
     }
 
     addNode(value, parentId, id) {
-        const parentNode = this.findNode(parentId, this.root);
-        if (parentNode) {
-            const newNodeId = id || Math.floor(Math.random() * 1000000);
-            const newNode = new Node(value, newNodeId);
-            parentNode.addChild(newNode);
-            return newNode;
-        } else {
-            throw new Error('Parent node not found');
+        const newNodeId = id || Math.floor(Math.random() * 1000000);
+        if (this.nodeMap.has(newNodeId)) {
+            console.error("Node with ID " + newNodeId + " already exists.");
+            return null;
         }
+        const parentNode = this.findNode(parentId);
+        if (parentNode && !parentNode.isDeleted) {
+            const newNode = new Node(value, newNodeId, parentId);
+            parentNode.addChild(newNode);
+            this.nodeMap.set(newNodeId, newNode);
+        } else {
+            console.error(`Cannot add node as child to non-existent or deleted parent with ID ${parentId}.`);
+            return null;
+        }
+        this.attemptRebuildingTree();
     }
 
-    findNode(id, node = this.root) {
-        // strings and numbers should work
-        if (node.id == id) {
-            return node;
-        }
-        for (const child of node.children) {
-            const result = this.findNode(id, child);
-            if (result) {
-                return result;
-            }
+    findNode(id) {
+        for (const root of this.roots) {
+            const node = this._findNode(id, root);
+            if (node) return node;
         }
         return null;
     }
 
-    updateNode(id, newValue) {
-        const node = this.findNode(id, this.root);
-        if (node) {
-            node.updateValue(newValue);
-        } else {
-            throw new Error('Node not found');
+    _findNode(id, node) {
+        if (node.id == id) {
+            return node;
         }
+        for (const child of node.children) {
+            const result = this._findNode(id, child);
+            if (result) return result;
+        }
+        return null;
     }
 
     deleteNode(id) {
-        const node = this.findNode(id, this.root);
+        const node = this.findNode(id);
         if (node) {
             node.delete();
         } else {
-            throw new Error('Node not found');
+            console.error(`Tried removing node with id: ${id}, but wasn't found!`);
+        }
+    }
+
+    changeValue(id, newValue) {
+        const node = this.findNode(id);
+        if (node) {
+            node.updateValue(newValue);
+        } else {
+            console.error(`Tried to change value of node with id: ${id}, but wasn't found!`);
         }
     }
 
     toJSON() {
-        return this.root.toJSON();
+        return this.roots.map(root => root.toJSON());
     }
 }
 
