@@ -11,6 +11,13 @@ class ActivityLog extends ReactiveElement {
 
     constructor() {
         super();
+        this.entries = [
+            { id: 1, label: 'Cache sync completed', time: '2m ago', owner: 'System' },
+            { id: 2, label: 'Manual override applied', time: '10m ago', owner: 'Leah' },
+            { id: 3, label: 'Node Cluster B flagged', time: '15m ago', owner: 'Monitor' },
+            { id: 4, label: 'Alert dismissed', time: '20m ago', owner: 'Devon' }
+        ];
+        this.limit = 3;
         this.state = {
             expanded: false
         };
@@ -20,17 +27,6 @@ class ActivityLog extends ReactiveElement {
 
     connectedCallback() {
         super.connectedCallback();
-        if (!this.entries) {
-            this.entries = [
-                { id: 1, label: 'Cache sync completed', time: '2m ago', owner: 'System' },
-                { id: 2, label: 'Manual override applied', time: '10m ago', owner: 'Leah' },
-                { id: 3, label: 'Node Cluster B flagged', time: '15m ago', owner: 'Monitor' },
-                { id: 4, label: 'Alert dismissed', time: '20m ago', owner: 'Devon' }
-            ];
-        }
-        if (!this.limit) {
-            this.limit = 3;
-        }
     }
 
     clearEntries() {

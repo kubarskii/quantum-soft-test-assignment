@@ -116,11 +116,24 @@ export class ReactiveElement extends HTMLElement {
     }
 
     update() {
-        this.removeEventListeners();
-        const renderOutput = this.render();
-        const { templateString, eventBindings } = this.preprocessHTML(renderOutput);
-        this.shadowRoot.innerHTML = templateString;
-        this.attachEventListeners(eventBindings);
+        if (this._isUpdating) {
+            this._pendingUpdate = true;
+            return;
+        }
+        this._isUpdating = true;
+        try {
+            this.removeEventListeners();
+            const renderOutput = this.render();
+            const { templateString, eventBindings } = this.preprocessHTML(renderOutput);
+            this.shadowRoot.innerHTML = templateString;
+            this.attachEventListeners(eventBindings);
+        } finally {
+            this._isUpdating = false;
+            if (this._pendingUpdate) {
+                this._pendingUpdate = false;
+                queueMicrotask(() => this.update());
+            }
+        }
     }
 
     render() {
@@ -144,7 +157,8 @@ export class ReactiveElement extends HTMLElement {
     preprocessHTML(html) {
         const eventBindings = [];
         const eventAttributeRegex = /@([\w:-]+(?:\.[\w-]+)*)=(['"])(.*?)\2/g;
-        const templateString = html?.replace(eventAttributeRegex, (match, eventDescriptor, quote, handlerExpression) => {
+        const source = typeof html === 'string' ? html : '';
+        const templateString = source.replace(eventAttributeRegex, (match, eventDescriptor, quote, handlerExpression) => {
             const attributeName = `data-event-${Math.random().toString(36).substring(2, 9)}`;
             eventBindings.push({
                 attributeName,

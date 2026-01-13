@@ -15,6 +15,27 @@ class ControlCenter extends ReactiveElement {
 
     constructor() {
         super();
+        this.context = {
+            environment: 'Staging',
+            region: 'us-east-1',
+            owner: 'Ops Team',
+            lastSync: '2 min ago'
+        };
+        this.filters = [
+            { id: 'healthy', label: 'Healthy', active: true },
+            { id: 'warning', label: 'Warning', active: true },
+            { id: 'critical', label: 'Critical', active: false }
+        ];
+        this.items = [
+            { id: 101, name: 'Node Cluster A', status: 'Healthy', owner: 'Leah', score: 92 },
+            { id: 102, name: 'Node Cluster B', status: 'Warning', owner: 'Devon', score: 71 },
+            { id: 103, name: 'Edge Cache', status: 'Healthy', owner: 'Kai', score: 88 },
+            { id: 104, name: 'Search Service', status: 'Critical', owner: 'Mina', score: 45 }
+        ];
+        this.alerts = [
+            { id: 'a1', severity: 'warning', message: 'Latency spike detected in Cluster B.' },
+            { id: 'a2', severity: 'critical', message: 'Search Service error budget depleted.' }
+        ];
         this.state = {
             activeTab: 'overview',
             search: '',
@@ -35,35 +56,6 @@ class ControlCenter extends ReactiveElement {
 
     connectedCallback() {
         super.connectedCallback();
-        if (!this.context) {
-            this.context = {
-                environment: 'Staging',
-                region: 'us-east-1',
-                owner: 'Ops Team',
-                lastSync: '2 min ago'
-            };
-        }
-        if (!this.filters) {
-            this.filters = [
-                { id: 'healthy', label: 'Healthy', active: true },
-                { id: 'warning', label: 'Warning', active: true },
-                { id: 'critical', label: 'Critical', active: false }
-            ];
-        }
-        if (!this.items) {
-            this.items = [
-                { id: 101, name: 'Node Cluster A', status: 'Healthy', owner: 'Leah', score: 92 },
-                { id: 102, name: 'Node Cluster B', status: 'Warning', owner: 'Devon', score: 71 },
-                { id: 103, name: 'Edge Cache', status: 'Healthy', owner: 'Kai', score: 88 },
-                { id: 104, name: 'Search Service', status: 'Critical', owner: 'Mina', score: 45 }
-            ];
-        }
-        if (!this.alerts) {
-            this.alerts = [
-                { id: 'a1', severity: 'warning', message: 'Latency spike detected in Cluster B.' },
-                { id: 'a2', severity: 'critical', message: 'Search Service error budget depleted.' }
-            ];
-        }
     }
 
     setTab(tab) {
