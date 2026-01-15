@@ -9,6 +9,9 @@ export class ReactiveElement extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this._isInitializing = true;
+        this._isUpdating = false;
+        this._pendingUpdate = false;
         this._initProperties();
         this.render = this.render.bind(this);
     }
@@ -90,6 +93,7 @@ export class ReactiveElement extends HTMLElement {
     }
 
     connectedCallback() {
+        this._isInitializing = false;
         this.update();
     }
 
@@ -111,6 +115,13 @@ export class ReactiveElement extends HTMLElement {
 
     requestUpdate(name, oldValue, newValue) {
         if (oldValue !== newValue) {
+            if (this._isInitializing) {
+                return;
+            }
+            if (this._isUpdating) {
+                this._pendingUpdate = true;
+                return;
+            }
             this.update();
         }
     }
