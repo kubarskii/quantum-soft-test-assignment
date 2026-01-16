@@ -9,9 +9,16 @@
 
 <body>
     <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #f5f6fa;
+        }
+
         .row {
             display: flex;
             flex-wrap: wrap;
+            gap: 16px;
         }
 
         .col {
@@ -28,6 +35,9 @@
 
         .container {
             border: 1px solid blue;
+            padding: 16px;
+            background: #ffffff;
+            border-radius: 16px;
         }
 
         .cache-footer {
@@ -41,9 +51,24 @@
         .add-node-to-cache {
             margin: auto;
         }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            border-radius: 16px;
+        }
     </style>
 
     <div class="container">
+        <div class="dashboard">
+            <control-center class="panel"></control-center>
+            <activity-log class="panel"></activity-log>
+        </div>
         <div class="row">
             <div class="col">
                 <div class="tree-container">
